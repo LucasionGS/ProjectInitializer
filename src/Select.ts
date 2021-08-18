@@ -1,9 +1,10 @@
 import "colors";
 
-export type ArgumentOption = { [displayName: string]: string } | string;
+export type ArgumentOption = { [displayName: string]: any } | string;
 export interface ArgumentObject {
   title?: string;
   options: ArgumentOption[];
+  if?: (args: any[]) => boolean;
 };
 
 export default class Select {
@@ -39,15 +40,18 @@ export default class Select {
 
     function writeOption(opt: ArgumentOption, selected: boolean = false) {
       cout.cursorTo(0);
-      if (typeof opt === "string") cout.write(selected ? opt.black.bgWhite : opt);
+      cout.clearLine(1);
+      if (typeof opt === "string") cout.write(" " + (selected ? (("< "+opt+" >")/*.black.bgWhite*/) : opt));
       if (typeof opt === "object") {
         for (const key in opt) {
           if (key in opt) {
-            cout.write(selected ? key.black.bgWhite : key);
+            cout.write(" " + (selected ? ("< "+key+" >")/*.black.bgWhite*/ : key));
             break; // Only get first one.
           }
         }
       }
+      cout.cursorTo(0);
+      // cout.moveCursor(2, 0);
     }
 
     options.forEach((opt, i) => {
@@ -61,18 +65,20 @@ export default class Select {
     let selectedIndex = 0;
 
     const inputHandler = (chk: Buffer, key: KeyPress) => {
-      if (key.name === "up") {
+      if (key.name === "up" || key.name === "left") {
+        if (selectedIndex <= 0) return;
+        
         writeOption(options[selectedIndex], false);
         cout.moveCursor(0, -1);
         writeOption(options[--selectedIndex], true);
       }
-      if (key.name === "down") {
+      else if (key.name === "down" || key.name === "right") {
+        if (selectedIndex >= options.length - 1) return;
         writeOption(options[selectedIndex], false);
         cout.moveCursor(0, 1);
         writeOption(options[++selectedIndex], true);
       }
-
-      if (key.name === "return") {
+      else if (key.name === "return") {
         cout.cursorTo(0, 1);
         cout.clearScreenDown();
         let chosen = options[selectedIndex];
@@ -80,11 +86,16 @@ export default class Select {
           if (typeof chosen === "object") {
             for (const key in chosen) {
               if (key in chosen) {
-                return key;
+                return chosen[key];
               }
             }
           }
         })());
+      }
+      else if (key.name === "c" || key.ctrl) {
+        console.log(); // New line.
+        console.log("Quitting...".red);
+        process.exit(1);
       }
     }
 
