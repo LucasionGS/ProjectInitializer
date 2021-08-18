@@ -7,6 +7,8 @@ import { RESOURCES } from ".";
 import { ArgumentObject, ArgumentOption } from "./Select";
 import { createEqualCondition, FileSystem, createRunCommandFrom, createRunAsyncCommandFrom } from "./Tools";
 import ProjectOptions from "./ProjectOptions";
+import commandExists from "command-exists";
+
 
 type GeneratorValue = void | string | boolean;
 export type GeneratorFunction = (args: any[], getArg: <T = string>(index: number) => T) => Promise<GeneratorValue> | GeneratorValue;
@@ -200,6 +202,43 @@ namespace Projects {
           console.log(`Installing module: Serve`);
           await run("npm i -D serve", "Installing Serve", "Installed Serve");
         }
+
+      },
+      // Finish
+      () => console.log("Project created successfully!")
+    ],
+    electron: [
+      () => !commandExists.sync("yarn") ? "yarn is required to install electron" : void 0,
+      ProjectOptions.requireInitialArgs(0, "Location required"),
+
+      async (args, getArg) => {
+        const dist = fromCWD(getArg(0));
+
+        const run = createRunAsyncCommandFrom(dist, true);
+        if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
+
+        // const fromDist = FileSystem.createFromFolder(dist);
+
+        console.log(`Installing Electron...`);
+        await run(`yarn create electron-app . --template=typescript-webpack`, "Downloading Electron", "Downloaded Electron");
+
+      },
+      // Finish
+      () => console.log("Project created successfully!")
+    ],
+    react: [
+      ProjectOptions.requireInitialArgs(0, "Location required"),
+
+      async (args, getArg) => {
+        const dist = fromCWD(getArg(0));
+
+        const run = createRunAsyncCommandFrom(dist, true);
+        if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
+
+        // const fromDist = FileSystem.createFromFolder(dist);
+
+        console.log(`Installing React...`);
+        await run(`npx create-react-app my-app --template typescript`, "Downloading React", "Downloaded React");
 
       },
       // Finish

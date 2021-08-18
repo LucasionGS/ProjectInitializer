@@ -12,7 +12,7 @@ namespace ProjectOptions {
   /**
    * Used to make sure the a certain number of arguments exists and strips off all others.
    */
-  export const requireInitialArgs = (startIndex: number, ...failMessages: string[]): GeneratorFunction => {
+  export const requireInitialArgs = (startIndex: number,  ...failMessages: string[]): GeneratorFunction => {
     return args => {
       const missingArgs: string[] = [];
       for (let i = 0; i < failMessages.length; i++) {

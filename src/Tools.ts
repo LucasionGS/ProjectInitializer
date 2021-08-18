@@ -98,7 +98,7 @@ export function createRunCommandFrom(cwd: string = process.cwd()) {
   }
 }
 
-export function createRunAsyncCommandFrom(cwd: string = process.cwd()) {
+export function createRunAsyncCommandFrom(cwd: string = process.cwd(), showOutput = false) {
   return async (command: string, commentWhileRunning?: string, commentOnFinish?: string) => {
     return new Promise<string>((resolve, reject) => {
       process.stdout.moveCursor(0, 1);
@@ -106,7 +106,7 @@ export function createRunAsyncCommandFrom(cwd: string = process.cwd()) {
       process.stdout.clearLine(1);
 
       let isRunning = true;
-      exec(command, { cwd }, (error, stdout, stderr) => {
+      let app = exec(command, { cwd }, (error, stdout, stderr) => {
         isRunning = false;
         process.stdout.cursorTo(0);
         process.stdout.clearLine(1);
@@ -117,6 +117,8 @@ export function createRunAsyncCommandFrom(cwd: string = process.cwd()) {
         }
         resolve(stdout);
       });
+
+      if (showOutput) app.stdout.on("data", data => process.stdout.write(data));
 
       let index = 0;
       let spinner = [
