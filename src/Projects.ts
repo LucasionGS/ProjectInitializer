@@ -20,9 +20,7 @@ namespace Projects {
   }
   export const Generators: { [identifier: string]: (ArgumentObject | GeneratorFunction)[] } = {
     node: [
-      args => {
-        args.length > 0 ? void 0 : args.push(".");
-      },
+      ProjectOptions.requireInitialArgs(0, "Location required"),
       {
         title: "Programming Language",
         options: [
@@ -138,9 +136,7 @@ namespace Projects {
       () => console.log("Project created successfully!")
     ],
     website: [
-      args => {
-        args.length > 0 ? void 0 : args.push(".");
-      },
+      ProjectOptions.requireInitialArgs(0, "Location required"),
       {
         title: "Programming Language",
         options: [
