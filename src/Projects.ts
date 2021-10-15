@@ -86,7 +86,8 @@ namespace Projects {
             [name]: "dist/index.js"
           },
           "scripts": {
-            "test": "node ."
+            "watch": isLanguage("TypeScript") ? "tsc -w" : "echo 'No compile created'",
+            "start": "node ."
           },
           "keywords": [],
           "author": os.userInfo().username,
@@ -172,7 +173,7 @@ namespace Projects {
           "description": "",
           "scripts": {
             "watch": isLanguage("TypeScript") ? "tsc -w" : "echo 'No compile created'",
-            "test": useServe ? "serve public" : "echo 'No test created'",
+            "start": useServe ? "serve public" : "echo 'No test created'",
           },
           "keywords": [],
           "author": os.userInfo().username,
