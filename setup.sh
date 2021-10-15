@@ -1,3 +1,3 @@
 npm i
-npm run compile
+npm run build
 echo "Project setup and compiled."

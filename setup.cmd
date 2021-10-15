@@ -1,1 +1,1 @@
-npm i && npm run compile && echo Project setup and compiled.
+npm i && npm run build && echo Project setup and compiled.
