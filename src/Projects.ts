@@ -1,8 +1,6 @@
-import cp from "child_process";
 import os from "os";
 import fs from "fs";
 import Path from "path";
-import { Readable } from "stream";
 import { RESOURCES } from ".";
 import { ArgumentObject, ArgumentOption } from "./Select";
 import { createEqualCondition, FileSystem, createRunCommandFrom, createRunAsyncCommandFrom } from "./Tools";
@@ -71,7 +69,7 @@ namespace Projects {
 
         const run = createRunAsyncCommandFrom(dist);
 
-        const nodePath = Path.resolve(RESOURCES, `node/${language}`);
+        const nodePath = Path.resolve(RESOURCES.INIT, `node/${language}`);
         const name = Path.basename(dist).replace(/\s/g, "-").toLowerCase();
 
         const isLanguage = createEqualCondition(language);
@@ -161,7 +159,7 @@ namespace Projects {
 
         const run = createRunAsyncCommandFrom(dist);
 
-        const websitePath = Path.resolve(RESOURCES, `website/${language}`);
+        const websitePath = Path.resolve(RESOURCES.INIT, `website/${language}`);
         const name = Path.basename(dist).replace(/\s/g, "-").toLowerCase();
 
         const isLanguage = createEqualCondition(language);
@@ -229,17 +227,44 @@ namespace Projects {
     ],
     react: [
       ProjectOptions.requireInitialArgs(0, "Location required"),
+      {
+        title: "Use SASS?",
+        options: ProjectOptions.BOOL,
+      },
 
       async (args, getArg) => {
-        const dist = fromCWD(getArg(0));
+        const name = getArg(0);
+        const dist = fromCWD(name);
+        const useSass = getArg<boolean>(1);
 
         const run = createRunAsyncCommandFrom(dist, true);
         if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
 
         // const fromDist = FileSystem.createFromFolder(dist);
 
-        console.log(`Installing React...`);
-        await run(`npx create-react-app my-app --template typescript`, "Downloading React", "Downloaded React");
+        console.log(`Installing React in path${dist}...`);
+        await run(`npx create-react-app . --template typescript`, "Downloading React", "Downloaded React");
+
+        if (useSass) {
+          console.log(`Installing module: Sass`);
+          await run("npm i -D sass", "Installing Sass", "Installed Sass");
+          const srcDir = Path.resolve(dist, "src");
+          await fs.promises.readdir(srcDir).then(async (files) => {
+            for (const file of files) {
+              if (file.endsWith(".js") || file.endsWith(".jsx") || file.endsWith(".ts") || file.endsWith(".tsx")) {
+                const filePath = Path.resolve(srcDir, file);
+                const content = await fs.promises.readFile(filePath, "utf-8");
+                await fs.promises.writeFile(filePath, content.replace(/\.css/g, ".scss"));
+              }
+
+              if (file.endsWith(".css")) {
+                const filePathCss = Path.resolve(srcDir, file);
+                const filePathScss = Path.resolve(srcDir, Path.basename(file, ".css") + ".scss");
+                await fs.promises.rename(filePathCss, filePathScss);
+              }
+            }
+          });
+        }
 
       },
       // Finish

@@ -28,5 +28,12 @@ namespace ProjectOptions {
       else return missingArgs.join("\n");
     }
   };
+
+  // Reset args to empty array
+  export const resetArgs = (): GeneratorFunction => {
+    return args => {
+      args.splice(0);
+    }
+  };
 }
 export default ProjectOptions;

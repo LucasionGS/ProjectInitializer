@@ -1,65 +1,54 @@
 #!/usr/bin/env node
 
-import Projects from "./Projects";
-import Path from "path";
 import Select from "./Select";
+import Path from "path";
 const keypress = require("keypress");
 
-const args = process.argv.slice(2);
+const pArgs = process.argv.slice(2);
 export const ROOT = Path.resolve(__dirname, "..");
-export const RESOURCES = Path.resolve(ROOT, "resources");
+export namespace RESOURCES {
+  export const BASE = Path.resolve(ROOT, "resources");
+  export const INIT = Path.resolve(ROOT, "resources/init");
+};
 
 // Prep
 keypress(process.stdin);
-
-const select = new Select(process.stdin, process.stdout);
+export const select = new Select(process.stdin, process.stdout);
 
 // Main body
-( async() => {
-  if (!args[0]) {
-console.log(
-`projectinit:
-${(() => {
-  let keys: string[] = [];
-  for (const key in Projects.Generators) {
-    if (Object.prototype.hasOwnProperty.call(Projects.Generators, key)) {
-      keys.push(key);
+(async () => {
+  switch (pArgs[0]) {
+    case "init": {
+      const init = (await import("./functions/init")).default;
+      await init(pArgs.slice(1));
+      break;
     }
-  }
 
-  return "\t"+ keys.join("\n\t");
-})()}`
-);
-    // return console.error("Missing argument");
-    return;
-  }
-  const genCmd = args.splice(0, 1)[0];
-  const gen = Projects.Generators[genCmd];
+    case "react-component":
+    case "rc": {
+      const rc = (await import("./functions/reactComponent")).default;
+      await rc(pArgs.slice(1));
+      break;
+    }
 
-  process.stdout.cursorTo(0, 0);
-  process.stdout.clearScreenDown();
-  const localArgs: string[] = [...args];
-  for (let i = 0; i < gen.length; i++) {
-    const opt = gen[i];
-    try {
-      if (typeof opt === "function") {
-        let response = await opt(localArgs, Projects.createGetArg(localArgs));
-        if (typeof response === "string" || response === false) {
-          if (typeof response === "string") console.error(response);
-          process.exit();
+    default: {
+      const commands = {
+        "init": "Initialize a new project",
+        "rc, react-component": "Create a new React component",
+      }
+      const longestCommand = Object.keys(commands).reduce((longest, command) => {
+        return command.length > longest ? command.length : longest;
+      }, 0);
+      console.log("No command found");
+      console.log("Commands:");
+      for (const cmd in commands) {
+        if (Object.prototype.hasOwnProperty.call(commands, cmd)) {
+          const desc = commands[cmd];
+          console.log(`  ${cmd.padEnd(longestCommand)} - ${desc}`);
         }
       }
-      if (typeof opt === "object") {
-        if (typeof opt.if === "function" && !opt.if(localArgs)) continue;
-        const choice = await select.choose(opt);
-        localArgs.push(choice);
-        console.log("You chose:" + choice);
-      }
-    } catch (error) {
-      console.error(error);
-      process.exit();
-    }
 
+      break; // End of no command found
+    }
   }
-  process.exit();
 })();

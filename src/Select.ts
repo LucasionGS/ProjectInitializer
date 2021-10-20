@@ -22,7 +22,7 @@ export default class Select {
       promise = new Promise<string>((res, rej) => { resolve = res; reject = rej });
 
     const finish = (value: string) => {
-      cin.setRawMode(true);
+      cin.setRawMode(false);
       cin.off("keypress", inputHandler);
       resolve(value);
     }
