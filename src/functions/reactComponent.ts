@@ -34,7 +34,7 @@ export default async function reactComponent(args: string[]) {
   }
 
   const info = findPackageJson(cwd);
-  if (!info) {
+  if (!info || !info.packageJson) {
     return console.error("No package.json found");
   }
 
@@ -120,7 +120,7 @@ export default function ${componentNameU}(props: ${componentNameU}Props) {
 
   fs.writeFileSync(componentStyleFile, `.${componentNameL} {\n  \n}`);
 
-  console.log(`Created component ${componentNameU} in ${componentPath}`);
+  console.log(`Created ${componentType} component ${componentNameU} in ${componentPath}`);
 
   return process.exit();
 }
