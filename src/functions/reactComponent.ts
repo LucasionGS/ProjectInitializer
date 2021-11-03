@@ -1,16 +1,46 @@
 import { select } from "../index";
 import fs from "fs";
 import Path from "path";
+import Config from "../Config";
 
 export default async function reactComponent(args: string[]) {
   if (!args[0]) {
     console.log(
-      `Create React component:\n\tion rc <componentName>`
+      [
+        "Create React component:",
+        "\tion rc <componentName>",
+        "\tion rc -c <...parameters>",
+      ].join("\n")
     );
     // return console.error("Missing argument");
     return;
   }
   const cwd = process.cwd();
+
+  const config = Config.fromDir(cwd);
+
+  if (args[0] === "-c") {
+    if (!args[1]) {
+      console.log(
+        [
+          "Create React component:",
+          "\tion rc -c <...parameters>",
+          "\t\tinit - Creates a config file in current directory.",
+          "\t\tset",
+          "\t\t\t<option> <value>",
+        ].join("\n")
+      );
+    }
+    if (args[1] === "init") {
+      config.data.reactComponent = {
+        components: null,
+      };
+      config.save();
+    }
+    return;
+  }
+
+
   function findPackageJson(dir: string) {
     let packageJson: {
       devDependencies: { [key: string]: string };
@@ -33,6 +63,8 @@ export default async function reactComponent(args: string[]) {
     };
   }
 
+
+
   const info = findPackageJson(cwd);
   if (!info || !info.packageJson) {
     return console.error("No package.json found");
@@ -48,18 +80,18 @@ export default async function reactComponent(args: string[]) {
 
   let css = "css";
   if (
-    packageJson?.dependencies["sass"]
-    || packageJson?.devDependencies["sass"]
-    || packageJson?.dependencies["node-sass"]
-    || packageJson?.devDependencies["node-sass"]
+    (packageJson?.dependencies && packageJson.dependencies["sass"])
+    || (packageJson?.devDependencies && packageJson.devDependencies["sass"])
+    || (packageJson?.dependencies && packageJson.dependencies["node-sass"])
+    || (packageJson?.devDependencies && packageJson.devDependencies["node-sass"])
   ) {
     css = "scss";
   }
 
   let jsx = "jsx";
   if (
-    packageJson?.dependencies["typescript"]
-    || packageJson?.devDependencies["typescript"]
+    (packageJson?.dependencies && packageJson.dependencies["typescript"])
+    || (packageJson?.devDependencies && packageJson.devDependencies["typescript"])
   ) {
     jsx = "tsx";
   }
@@ -68,7 +100,11 @@ export default async function reactComponent(args: string[]) {
   const componentNameU = name.charAt(0).toUpperCase() + name.slice(1);
   const componentNameL = name.charAt(0).toLowerCase() + name.slice(1);
 
-  const componentPath = `${dir}/src/components/${componentNameU}`;
+  const componentPath = Path.resolve((
+    config.data.reactComponent?.components ?
+      Path.resolve(dir, config.data.reactComponent.components)
+      : dir + "/src/components"
+  ), componentNameU);
   const componentFile = `${componentPath}/${componentNameU}.${jsx}`;
   const componentStyleFile = `${componentPath}/${componentNameU}.${css}`;
 
