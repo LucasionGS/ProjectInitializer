@@ -40,7 +40,6 @@ export default async function reactComponent(args: string[]) {
     return;
   }
 
-
   function findPackageJson(dir: string) {
     let packageJson: {
       devDependencies: { [key: string]: string };
@@ -62,8 +61,6 @@ export default async function reactComponent(args: string[]) {
       dir
     };
   }
-
-
 
   const info = findPackageJson(cwd);
   if (!info || !info.packageJson) {
@@ -96,20 +93,23 @@ export default async function reactComponent(args: string[]) {
     jsx = "tsx";
   }
 
-  const name = args[0];
+  const parts = args[0].split(/[\/\\]/g);
+  const name = parts.pop();
   const componentNameU = name.charAt(0).toUpperCase() + name.slice(1);
   const componentNameL = name.charAt(0).toLowerCase() + name.slice(1);
+  parts.push(componentNameU);
+  const componentNameUPath = parts.join("/");
 
   const componentPath = Path.resolve((
     config.data.reactComponent?.components ?
       Path.resolve(dir, config.data.reactComponent.components)
       : dir + "/src/components"
-  ), componentNameU);
+  ), componentNameUPath);
   const componentFile = `${componentPath}/${componentNameU}.${jsx}`;
   const componentStyleFile = `${componentPath}/${componentNameU}.${css}`;
 
   if (fs.existsSync(componentPath)) {
-    return console.error(`Component ${componentNameU} already exists`);
+    return console.error(`Component ${componentPath} already exists`);
   }
 
   fs.mkdirSync(componentPath, { recursive: true });
