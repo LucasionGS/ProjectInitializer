@@ -1,9 +1,9 @@
 import os from "os";
 import fs from "fs";
 import Path from "path";
-import { RESOURCES } from ".";
-import { ArgumentObject, ArgumentOption } from "./Select";
-import { createEqualCondition, FileSystem, createRunCommandFrom, createRunAsyncCommandFrom } from "./Tools";
+import { RESOURCES } from "../..";
+import { ArgumentObject, ArgumentOption } from "../../Select";
+import { createEqualCondition, FileSystem, createRunCommandFrom, createRunAsyncCommandFrom } from "../../Tools";
 import ProjectOptions from "./ProjectOptions";
 import commandExists from "command-exists";
 
@@ -207,8 +207,8 @@ namespace Projects {
       () => console.log("Project created successfully!")
     ],
     electron: [
-      () => !commandExists.sync("yarn") ? "yarn is required to install electron" : void 0,
       ProjectOptions.requireInitialArgs(0, "Location required"),
+      () => !commandExists.sync("yarn") ? "yarn is required to install electron" : void 0,
 
       async (args, getArg) => {
         const dist = fromCWD(getArg(0));

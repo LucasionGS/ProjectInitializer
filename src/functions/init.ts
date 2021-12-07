@@ -1,4 +1,4 @@
-import Projects from "../Projects";
+import Projects from "./init/Projects";
 import { select } from "../index";
 
 export default async function init(args: string[]) {
