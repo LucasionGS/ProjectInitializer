@@ -182,12 +182,12 @@ namespace Projects {
 
         const fromWebsite = FileSystem.createFromFolder(websitePath);
         const fromDist = FileSystem.createFromFolder(dist);
-        
+
         const files = [
           await FileSystem.copyDirectory(fromWebsite(), fromDist()),
           fs.promises.writeFile(fromDist("package.json"), JSON.stringify(packageJson, null, 2)),
         ];
-        
+
         await Promise.all(files);
 
         switch (language) {
@@ -236,18 +236,31 @@ namespace Projects {
         const name = getArg(0);
         const dist = fromCWD(name);
         const useSass = getArg<boolean>(1);
+        const useYarn = commandExists.sync("yarn");
 
         const run = createRunAsyncCommandFrom(dist, true);
         if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
 
         // const fromDist = FileSystem.createFromFolder(dist);
 
-        console.log(`Installing React in path${dist}...`);
-        await run(`npx create-react-app . --template typescript`, "Downloading React", "Downloaded React");
+        console.log(`Installing React in path ${dist}...`);
+        if (useYarn) {
+          await run(`yarn create react-app "${dist}" --template typescript`, "Downloading React", "Downloaded React");
+        }
+        else {
+          await run(`npx create-react-app "${dist}" --template typescript`, "Downloading React", "Downloaded React");
+        }
 
         if (useSass) {
           console.log(`Installing module: Sass`);
-          await run("npm i -D sass", "Installing Sass", "Installed Sass");
+
+          if (useYarn) {
+            await run(`yarn add sass`, "Installing Sass", "Installed Sass");
+          }
+          else {
+            await run(`npm i -D sass`, "Installing Sass", "Installed Sass");
+          }
+
           const srcDir = Path.resolve(dist, "src");
           await fs.promises.readdir(srcDir).then(async (files) => {
             for (const file of files) {
