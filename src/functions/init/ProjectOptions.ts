@@ -4,7 +4,7 @@ namespace ProjectOptions {
   /**
    * Asks for a yes or no answer. Yes is `true`, No is `false`.
    */
-  export const BOOL: [{ "No": false },{ "Yes": true }] = [
+  export const BOOL: [{ "No": false }, { "Yes": true }] = [
     { "No": false },
     { "Yes": true }
   ];
@@ -12,7 +12,7 @@ namespace ProjectOptions {
   /**
    * Used to make sure the a certain number of arguments exists and strips off all others.
    */
-  export const requireInitialArgs = (startIndex: number,  ...failMessages: string[]): GeneratorFunction => {
+  export const requireInitialArgs = (startIndex: number, ...failMessages: string[]): GeneratorFunction => {
     return args => {
       const missingArgs: string[] = [];
       for (let i = 0; i < failMessages.length; i++) {
@@ -29,7 +29,9 @@ namespace ProjectOptions {
     }
   };
 
-  // Reset args to empty array
+  /**
+   * Reset args to empty array
+   */
   export const resetArgs = (): GeneratorFunction => {
     return args => {
       args.splice(0);
