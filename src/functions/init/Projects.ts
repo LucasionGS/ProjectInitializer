@@ -283,6 +283,33 @@ namespace Projects {
       // Finish
       () => console.log("Project created successfully!")
     ],
+    "react-express": [
+      ProjectOptions.requireInitialArgs(0, "Location required"),
+      async (args, getArg) => {
+        const name = getArg(0);
+        const dist = fromCWD(name);
+        const useGit = commandExists.sync("git");
+
+        const run = createRunAsyncCommandFrom(dist, true);
+        if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
+
+        // const fromDist = FileSystem.createFromFolder(dist);
+
+        console.log(`Installing React Express in path ${dist}...`);
+        if (useGit) {
+          await run(`git clone https://github.com/LucasionGS/react-fullstack.git "${dist}"`, "Cloning React Express", "Downloaded React Express");
+          await run(`npm i`, "Installing modules", "Installed modules");
+        }
+        else {
+          throw new Error("Git is required to install React Express");
+        }
+
+        // Clean up
+        await fs.promises.rm(Path.resolve(dist, ".git"), { recursive: true });
+      },
+      // Finish
+      () => console.log("Project created successfully!")
+    ],
   }
 }
 

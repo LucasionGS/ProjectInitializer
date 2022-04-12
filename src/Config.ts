@@ -61,6 +61,8 @@ namespace Config {
 
   interface IConfigReactComponent {
     components?: string;
+    styleFlavor?: "css" | "sass" | "scss";
+    jsFlavor?: "js" | "ts";
   }
 
   export interface IConfig {

@@ -69,14 +69,18 @@ export default async function reactComponent(args: string[]) {
 
   const { packageJson, dir } = info;
 
-  let componentType: "class" | "function" = "class";
+  let componentType: "class" | "function" = "function";
 
   if (args[1] === "function" || args[1] === "f") {
     componentType = "function";
   }
+  else if (args[1] === "class" || args[1] === "c") {
+    componentType = "class";
+  }
 
   let css = "css";
   if (
+    !config.data.reactComponent?.styleFlavor && 
     (packageJson?.dependencies && packageJson.dependencies["sass"])
     || (packageJson?.devDependencies && packageJson.devDependencies["sass"])
     || (packageJson?.dependencies && packageJson.dependencies["node-sass"])
@@ -84,13 +88,19 @@ export default async function reactComponent(args: string[]) {
   ) {
     css = "scss";
   }
+  else if (config.data.reactComponent?.styleFlavor) {
+    css = config.data.reactComponent.styleFlavor;
+  }
 
   let jsx = "jsx";
-  if (
+  if (!config.data.reactComponent?.jsFlavor &&
     (packageJson?.dependencies && packageJson.dependencies["typescript"])
     || (packageJson?.devDependencies && packageJson.devDependencies["typescript"])
   ) {
     jsx = "tsx";
+  }
+  else if (config.data.reactComponent?.jsFlavor) {
+    jsx = config.data.reactComponent.jsFlavor;
   }
 
   const parts = args[0].split(/[\/\\]/g);
