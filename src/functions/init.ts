@@ -1,5 +1,6 @@
 import Projects from "./init/Projects";
 import { select } from "../index";
+import { ArgumentObject, CheckedArgumentObject, CheckedArgumentsValues } from "../Select";
 
 export default async function init(args: string[]) {
   if (!args[0]) {
@@ -23,7 +24,7 @@ export default async function init(args: string[]) {
 
   process.stdout.cursorTo(0, 0);
   process.stdout.clearScreenDown();
-  const localArgs: string[] = [...args];
+  const localArgs: (string | CheckedArgumentsValues)[] = [...args];
   for (let i = 0; i < gen.length; i++) {
     const opt = gen[i];
     try {
@@ -38,9 +39,24 @@ export default async function init(args: string[]) {
       if (typeof opt === "object") {
         if (typeof opt.if === "function" && !opt.if(localArgs))
           continue;
-        const choice = await select.choose(opt);
-        localArgs.push(choice);
-        console.log("You chose:" + choice);
+
+        function isCheckedArguments(opt: CheckedArgumentObject<string[]> | ArgumentObject): opt is CheckedArgumentObject<string[]> {
+          return (opt as CheckedArgumentObject<string[]>).items !== undefined;
+        }
+
+        if (isCheckedArguments(opt)) {
+          const choice = await select.chooseMultiple(opt);
+          const data: CheckedArgumentsValues = {};
+          opt.items.forEach((item, i) => {
+            data[item] = choice.includes(item);
+          });
+          localArgs.push(data);
+        }
+        else {
+          const choice = await select.choose(opt);
+          localArgs.push(choice);
+          console.log("You chose:" + choice);
+        }
       }
     } catch (error) {
       console.error(error);

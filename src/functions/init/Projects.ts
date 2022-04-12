@@ -2,8 +2,8 @@ import os from "os";
 import fs from "fs";
 import Path from "path";
 import { RESOURCES } from "../..";
-import { ArgumentObject, ArgumentOption } from "../../Select";
-import { createEqualCondition, FileSystem, createRunCommandFrom, createRunAsyncCommandFrom } from "../../Tools";
+import { ArgumentObject, CheckedArgumentObject } from "../../Select";
+import { createEqualCondition, FileSystem, createRunAsyncCommandFrom } from "../../Tools";
 import ProjectOptions from "./ProjectOptions";
 import commandExists from "command-exists";
 
@@ -18,8 +18,8 @@ namespace Projects {
   export function createGetArg(args: any[]) {
     return <T = string>(index: number): T => args[index];
   }
-  export const Generators: { [identifier: string]: (ArgumentObject | GeneratorFunction)[] } = {
-    node: [
+  export const Generators: { [identifier: string]: (ArgumentObject | GeneratorFunction | CheckedArgumentObject)[] } = {
+    "node": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
       {
         title: "Programming Language",
@@ -30,42 +30,27 @@ namespace Projects {
       },
       {
         title: "Install modules?",
-        options: [
-          ...ProjectOptions.BOOL
-        ]
-      },
-      // Install modules
-      {
-        if: args => args[2],
-        title: "Install Express?",
-        options: [
-          ...ProjectOptions.BOOL
-        ]
-      },
-      {
-        if: args => args[2],
-        title: "Install MySQL?",
-        options: [
-          ...ProjectOptions.BOOL
-        ]
-      },
-      {
-        if: args => args[2],
-        title: "Install Discord.js?",
-        options: [
-          ...ProjectOptions.BOOL
+        items: [
+          "Express",
+          "Sequelize",
+          "mysql2",
+          "sqlite3",
+          "Discord.js",
         ]
       },
 
       async (args, getArg) => {
         const dist = fromCWD(getArg(0));
-        const language = getArg(1);
-        const installExtensions = getArg<boolean>(2);
+        const language = getArg<"TypeScript" | "JavaScript">(1);
 
         // Modules
-        const installedExpress = getArg<boolean>(3);
-        const installMysql = getArg<boolean>(4);
-        const installDiscordJs = getArg<boolean>(5);
+        const modules = getArg<{
+          "Express": boolean;
+          "Sequelize": boolean;
+          "mysql2": boolean;
+          "sqlite3": boolean;
+          "Discord.js": boolean;
+        }>(2);
 
         const run = createRunAsyncCommandFrom(dist);
 
@@ -112,31 +97,32 @@ namespace Projects {
             break;
         }
 
-        if (installExtensions) {
-          // If express is selected then add the module
-          if (installedExpress) {
-            console.log(`Installing module: Express`);
-            await run("npm i express", "Installing Express", "Installed Express");
-            await run("npm i -D @types/express", "Installing @types/express", "Installed @types/express");
-          }
-          // If mysql is selected then add the module
-          if (installMysql) {
-            console.log(`Installing module: MySQL`);
-            await run("npm i mysql", "Installing MySQL", "Installed MySQL");
-            await run("npm i -D @types/mysql", "Installing @types/mysql", "Installed @types/mysql");
-          }
-          // If discord.js is selected then add the module
-          if (installDiscordJs) {
-            console.log(`Installing module: Discord.js`);
-            await run("npm i discord.js", "Installing Discord.js", "Installed Discord.js");
-          }
+        if (modules["Express"]) {
+          console.log(`Installing module: Express`);
+          await run("npm i express", "Installing Express", "Installed Express");
+          await run("npm i -D @types/express", "Installing @types/express", "Installed @types/express");
         }
-
+        if (modules["Sequelize"]) {
+          console.log(`Installing module: Sequelize`);
+          await run("npm i sequelize", "Installing Sequelize", "Installed Sequelize");
+        }
+        if (modules["mysql2"]) {
+          console.log(`Installing module: MySQL`);
+          await run("npm i mysql2", "Installing MySQL", "Installed MySQL");
+        }
+        if (modules["sqlite3"]) {
+          console.log(`Installing module: Sqlite3`);
+          await run("npm i sqlite3", "Installing Sqlite3", "Installed Sqlite3");
+        }
+        if (modules["Discord.js"]) {
+          console.log(`Installing module: Discord.js`);
+          await run("npm i discord.js", "Installing Discord.js", "Installed Discord.js");
+        }
       },
       // Finish
       () => console.log("Project created successfully!")
     ],
-    website: [
+    "website": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
       {
         title: "Programming Language",
@@ -206,7 +192,7 @@ namespace Projects {
       // Finish
       () => console.log("Project created successfully!")
     ],
-    electron: [
+    "electron": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
       () => !commandExists.sync("yarn") ? "yarn is required to install electron" : void 0,
 
@@ -225,7 +211,7 @@ namespace Projects {
       // Finish
       () => console.log("Project created successfully!")
     ],
-    react: [
+    "react": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
       {
         title: "Use SASS?",
@@ -285,10 +271,15 @@ namespace Projects {
     ],
     "react-express": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
+      {
+        title: "Use Mantine?",
+        options: ProjectOptions.BOOL,
+      },
       async (args, getArg) => {
         const name = getArg(0);
         const dist = fromCWD(name);
         const useGit = commandExists.sync("git");
+        const useMantine = getArg<boolean>(1);
 
         const run = createRunAsyncCommandFrom(dist, true);
         if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
@@ -299,6 +290,12 @@ namespace Projects {
         if (useGit) {
           await run(`git clone https://github.com/LucasionGS/react-fullstack.git "${dist}"`, "Cloning React Express", "Downloaded React Express");
           await run(`npm i`, "Installing modules", "Installed modules");
+
+          if (useMantine) {
+            console.log(`Installing module: Mantine`);
+            await run(`npm install dayjs @mantine/notifications @mantine/modals @mantine/hooks @mantine/form @mantine/dropzone @mantine/dates @mantine/core`, "Installing Mantine", "Installed Mantine");
+          }
+          
         }
         else {
           throw new Error("Git is required to install React Express");
@@ -306,6 +303,7 @@ namespace Projects {
 
         // Clean up
         await fs.promises.rm(Path.resolve(dist, ".git"), { recursive: true });
+        await run("git init", "Initializing Git", "Initialized Git");
       },
       // Finish
       () => console.log("Project created successfully!")
