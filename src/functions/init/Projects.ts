@@ -269,41 +269,107 @@ namespace Projects {
       // Finish
       () => console.log("Project created successfully!")
     ],
+    // "react-express-old": [
+    //   ProjectOptions.requireInitialArgs(0, "Location required"),
+    //   {
+    //     title: "Use Mantine?",
+    //     options: ProjectOptions.BOOL,
+    //   },
+    //   async (args, getArg) => {
+    //     const name = getArg(0);
+    //     const dist = fromCWD(name);
+    //     const useGit = commandExists.sync("git");
+    //     const useMantine = getArg<boolean>(1);
+
+    //     const run = createRunAsyncCommandFrom(dist, true);
+    //     if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
+
+    //     // const fromDist = FileSystem.createFromFolder(dist);
+
+    //     console.log(`Installing React Express in path ${dist}...`);
+    //     if (useGit) {
+    //       await run(`git clone https://github.com/LucasionGS/react-fullstack.git "${dist}"`, "Cloning React Express", "Downloaded React Express");
+    //       await run(`npm i`, "Installing modules", "Installed modules");
+
+    //       if (useMantine) {
+    //         console.log(`Installing module: Mantine`);
+    //         await run(`npm install dayjs @mantine/notifications @mantine/modals @mantine/hooks @mantine/form @mantine/dropzone @mantine/dates @mantine/core`, "Installing Mantine", "Installed Mantine");
+    //       }
+
+    //     }
+    //     else {
+    //       throw new Error("Git is required to install React Express");
+    //     }
+
+    //     // Clean up
+    //     await fs.promises.rm(Path.resolve(dist, ".git"), { recursive: true });
+    //     await run("git init", "Initializing Git", "Initialized Git");
+    //   },
+    //   // Finish
+    //   () => console.log("Project created successfully!")
+    // ],
     "react-express": [
       ProjectOptions.requireInitialArgs(0, "Location required"),
-      {
-        title: "Use Mantine?",
-        options: ProjectOptions.BOOL,
-      },
       async (args, getArg) => {
         const name = getArg(0);
         const dist = fromCWD(name);
+        const useYarn = commandExists.sync("yarn");
         const useGit = commandExists.sync("git");
-        const useMantine = getArg<boolean>(1);
 
         const run = createRunAsyncCommandFrom(dist, true);
         if (!fs.existsSync(dist)) fs.mkdirSync(dist, { recursive: true });
 
-        // const fromDist = FileSystem.createFromFolder(dist);
+        const fromDist = FileSystem.createFromFolder(dist);
+        // Structure
+        // - client
+        //   - <Create React App>
+        // - server
+        //   - <Copy from resources/init/server>
+        // - <Copy from resources/init/>
 
         console.log(`Installing React Express in path ${dist}...`);
-        if (useGit) {
-          await run(`git clone https://github.com/LucasionGS/react-fullstack.git "${dist}"`, "Cloning React Express", "Downloaded React Express");
-          await run(`npm i`, "Installing modules", "Installed modules");
 
-          if (useMantine) {
-            console.log(`Installing module: Mantine`);
-            await run(`npm install dayjs @mantine/notifications @mantine/modals @mantine/hooks @mantine/form @mantine/dropzone @mantine/dates @mantine/core`, "Installing Mantine", "Installed Mantine");
-          }
-          
+        const FromReactExpress = FileSystem.createFromFolder(Path.resolve(RESOURCES.INIT, "reactexpress"));
+        const serverPath = Path.resolve(RESOURCES.INIT, "reactexpress/server");
+        FileSystem.copyDirectory(serverPath, fromDist("server"));
+
+        fs.copyFileSync(FromReactExpress("package.json"), fromDist("package.json"));
+        fs.copyFileSync(FromReactExpress("dev.js"), fromDist("dev.js"));
+        fs.copyFileSync(FromReactExpress("build.js"), fromDist("build.js"));
+        fs.copyFileSync(FromReactExpress(".gitignore"), fromDist(".gitignore"));
+
+
+        if (useYarn) { // Server
+          // Express
+          await run(`yarn add express`, "Installing Express", "Installed Express");
+          await run(`yarn add --dev @types/express`, "Installing Express Types", "Installed Express Types");
+
+          // http-proxy-middleware
+          await run(`yarn add http-proxy-middleware`, "Installing http-proxy-middleware", "Installed http-proxy-middleware"); // Comes with types
+
+          // Typescript
+          await run(`yarn add --dev typescript`, "Installing Typescript", "Installed Typescript");
+        }
+
+        if (useYarn) { // React app
+          await run(`yarn create react-app "${dist}/client" --template typescript`, "Downloading React", "Downloaded React");
+          // SCSS
+          await run(`yarn add --dev sass`, "Installing Sass", "Installed Sass");
         }
         else {
-          throw new Error("Git is required to install React Express");
+          await run(`npx create-react-app "${dist}/client" --template typescript`, "Downloading React", "Downloaded React");
+          // SCSS
+          await run(`npm i -D sass`, "Installing Sass", "Installed Sass");
         }
+        fs.writeFileSync(fromDist("client/.env"), "PORT=3123");
 
-        // Clean up
-        await fs.promises.rm(Path.resolve(dist, ".git"), { recursive: true });
-        await run("git init", "Initializing Git", "Initialized Git");
+        fs.rmSync(fromDist("client", ".git"), { recursive: true });
+
+        if (useGit) {
+          await run("git init", "Initializing Git", "Initialized Git");
+          await run("git add .", "Adding files to Git", "Added files to Git");
+          await run("git commit -m \"Initial commit\"", "Commiting files", "Committed files");
+        }
       },
       // Finish
       () => console.log("Project created successfully!")

@@ -1,0 +1,10 @@
+# Server
+/node_modules
+server/dist
+
+# Client
+client/node_modules
+client/build
+
+# Global
+/build
